@@ -45,7 +45,15 @@
       "description": "If you are directly deploying from GitHub, set this to False. But if you later add Service Accounts, go to 'Config Vars' in app settings and set this to True.",
       "value": "False",
       "required": false
-    }
+    },
+    "TOKEN_PICKLE_URL": {
+      "description": "(Optional) Only if you want to load your token.pickle externally from an index link. Fill this with the direct link of that file.",
+      "required": false
+    },
+    "ACCOUNTS_ZIP_URL": {
+      "description": "(Optional) Only if you want to load your service accs externally from an index link. Archive your service accs json files to a zip file directly (don't archive the accounts folder. Select all the jsons inside and zip them only instead. Name the zip file with whatever you want, it doesn't matter). Fill this with the direct link of that file.",
+      "required": false
+    },
   },
   "buildpacks": [{
     "url": "heroku/python"
