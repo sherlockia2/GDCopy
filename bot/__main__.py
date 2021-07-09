@@ -1,19 +1,24 @@
+import subprocess
+import time
+
+from telegram import ParseMode
 from telegram.ext import CommandHandler, run_async
+from telegram.error import TimedOut, BadRequest
+
 from bot.gDrive import GoogleDriveHelper
 from bot.fs_utils import get_readable_file_size
-from bot import LOGGER, dispatcher, updater, bot
 from bot.config import BOT_TOKEN, OWNER_ID, GDRIVE_FOLDER_ID
 from bot.decorators import is_authorised, is_owner
-from telegram.error import TimedOut, BadRequest
 from bot.clone_status import CloneStatus
 from bot.msg_utils import deleteMessage, sendMessage
-import time
+from bot import LOGGER, dispatcher, updater, bot
 
 REPO_LINK = "https://github.com/jagrit007/Telegram-CloneBot"
 # Soon to be used for direct updates from within the bot.
 
 @run_async
 def start(update, context):
+    LOGGER.info('UID: {} - UN: {} - MSG: {}'.format(update.message.chat.id, update.message.chat.username, update.message.text))
     sendMessage("Hello! Please send me a Google Drive Shareable Link to Clone to your Drive!" \
         "\nSend /help for checking all available commands.",
     context.bot, update, 'Markdown')
@@ -21,6 +26,7 @@ def start(update, context):
 
 @run_async
 def helper(update, context):
+    LOGGER.info('UID: {} - UN: {} - MSG: {}'.format(update.message.chat.id, update.message.chat.username, update.message.text))
     sendMessage("Here are the available commands of the bot\n\n" \
         "*Usage:* `/clone <link> [DESTINATION_ID]`\n*Example:* \n1. `/clone https://drive.google.com/drive/u/1/folders/0AO-ISIXXXXXXXXXXXX`\n2. `/clone 0AO-ISIXXXXXXXXXXXX`" \
             "\n*DESTIONATION_ID* is optional. It can be either link or ID to where you wish to store a particular clone." \
@@ -33,6 +39,7 @@ def helper(update, context):
 @run_async
 @is_authorised
 def cloneNode(update, context):
+    LOGGER.info('UID: {} - UN: {} - MSG: {}'.format(update.message.chat.id, update.message.chat.username, update.message.text))
     args = update.message.text.split(" ")
     if len(args) > 1:
         link = args[1]
@@ -86,12 +93,61 @@ def sleeper(value, enabled=True):
     return
 
 @run_async
+@is_authorised
+def countNode(update,context):
+    LOGGER.info('UID: {} - UN: {} - MSG: {}'.format(update.message.chat.id, update.message.chat.username, update.message.text))
+    args = update.message.text.split(" ",maxsplit=1)
+    if len(args) > 1:
+        link = args[1]
+        msg = sendMessage(f"Counting: <code>{link}</code>",context.bot,update)
+        gd = GoogleDriveHelper()
+        result = gd.count(link)
+        deleteMessage(context.bot,msg)
+        sendMessage(result,context.bot,update)
+    else:
+        sendMessage("Provide G-Drive Shareable Link to Count.",context.bot,update)
+
+@run_async
 @is_owner
 def sendLogs(update, context):
+    LOGGER.info('UID: {} - UN: {} - MSG: {}'.format(update.message.chat.id, update.message.chat.username, update.message.text))
     with open('log.txt', 'rb') as f:
         bot.send_document(document=f, filename=f.name,
                         reply_to_message_id=update.message.message_id,
                         chat_id=update.message.chat_id)
+
+@run_async
+@is_owner
+def shell(update, context):
+    message = update.effective_message
+    cmd = message.text.split(' ', 1)
+    if len(cmd) == 1:
+        message.reply_text('No command to execute was given.')
+        return
+    cmd = cmd[1]
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    stdout, stderr = process.communicate()
+    reply = ''
+    stderr = stderr.decode()
+    stdout = stdout.decode()
+    if stdout:
+        reply += f"*Stdout*\n`{stdout}`\n"
+        LOGGER.info(f"Shell - {cmd} - {stdout}")
+    if stderr:
+        reply += f"*Stderr*\n`{stderr}`\n"
+        LOGGER.error(f"Shell - {cmd} - {stderr}")
+    if len(reply) > 3000:
+        with open('shell_output.txt', 'w') as file:
+            file.write(reply)
+        with open('shell_output.txt', 'rb') as doc:
+            context.bot.send_document(
+                document=doc,
+                filename=doc.name,
+                reply_to_message_id=message.message_id,
+                chat_id=message.chat_id)
+    else:
+        message.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
 
 def main():
     LOGGER.info("Bot Started!")
@@ -99,6 +155,11 @@ def main():
     start_handler = CommandHandler('start', start)
     help_handler = CommandHandler('help', helper)
     log_handler = CommandHandler('logs', sendLogs)
+    count_handler = CommandHandler('count', countNode)
+    shell_handler = CommandHandler(['shell', 'sh', 'tr', 'term', 'terminal'], shell)
+    
+    dispatcher.add_handler(shell_handler)
+    dispatcher.add_handler(count_handler)
     dispatcher.add_handler(log_handler)
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(clone_handler)
