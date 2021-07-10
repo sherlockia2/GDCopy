@@ -1,5 +1,6 @@
 import subprocess
 import time
+import importlib
 
 from telegram import ParseMode
 from telegram.ext import CommandHandler, run_async
@@ -11,7 +12,12 @@ from bot.config import BOT_TOKEN, OWNER_ID, GDRIVE_FOLDER_ID
 from bot.decorators import is_authorised, is_owner
 from bot.clone_status import CloneStatus
 from bot.msg_utils import deleteMessage, sendMessage
+from bot.modules import ALL_MODULES
 from bot import LOGGER, dispatcher, updater, bot
+
+for module in ALL_MODULES:
+    imported_module = importlib.import_module("bot.modules." + module)
+    importlib.reload(imported_module)
 
 REPO_LINK = "https://github.com/jagrit007/Telegram-CloneBot"
 # Soon to be used for direct updates from within the bot.
