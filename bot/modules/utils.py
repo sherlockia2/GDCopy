@@ -9,6 +9,8 @@ from bot.fs_utils import get_readable_file_size
 from bot.decorators import is_authorised
 from bot import dispatcher
 
+@run_async
+@is_authorised
 def stats(update, context):
     total, used, free = shutil.disk_usage('.')
     total = get_readable_file_size(total)
@@ -72,6 +74,8 @@ def speed_convert(size):
     return f"{round(size, 2)} {units[zero]}"
 
 
-SPEED_HANDLER = CommandHandler(BotCommands.SpeedCommand, speedtest)
+SPEED_HANDLER = CommandHandler(["speedtest", "speed"] speedtest)
+STATS_HANDLER = CommandHandler("stats", stats)
 
+dispatcher.add_handler(STATS_HANDLER)
 dispatcher.add_handler(SPEED_HANDLER)
