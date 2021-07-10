@@ -377,7 +377,7 @@ class GoogleDriveHelper:
             LOGGER.info(f"Counting: {name}")
             if drive_file['mimeType'] == self.__G_DRIVE_DIR_MIME_TYPE:
                 self.gDrive_directory(**drive_file)
-                msg += f'<bFilename : </b><code>{name}</code>'
+                msg += f'<b>Filename : </b><code>{name}</code>'
                 msg += f'\n<b>Size : </b>{get_readable_file_size(self.total_bytes)}'
                 msg += f"\n<b>Type : </b>Folder"
                 msg += f"\n<b>SubFolders : </b>{self.total_folders}"
