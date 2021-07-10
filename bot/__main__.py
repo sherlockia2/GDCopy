@@ -2,7 +2,7 @@ import subprocess
 import time
 import importlib
 
-from telegram import ParseMode
+from telegram import ParseMode, BotCommand
 from telegram.ext import CommandHandler, run_async
 from telegram.error import TimedOut, BadRequest
 
@@ -155,8 +155,15 @@ def shell(update, context):
     else:
         message.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
 
+
+botcmds = [
+BotCommand(f'clone','Copy file/folder to Drive'),
+BotCommand(f'count','Count file/folder of Drive link')]
+
+
 def main():
     LOGGER.info("Bot Started!")
+    bot.set_my_commands(botcmds)
     clone_handler = CommandHandler('clone', cloneNode)
     start_handler = CommandHandler('start', start)
     help_handler = CommandHandler('help', helper)
