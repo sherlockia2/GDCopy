@@ -74,7 +74,7 @@ def speed_convert(size):
     return f"{round(size, 2)} {units[zero]}"
 
 
-SPEED_HANDLER = CommandHandler(["speedtest", "speed"] speedtest)
+SPEED_HANDLER = CommandHandler(["speedtest", "speed"], speedtest)
 STATS_HANDLER = CommandHandler("stats", stats)
 
 dispatcher.add_handler(STATS_HANDLER)
