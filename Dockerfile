@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 RUN chmod 777 /usr/src/app
 
 RUN  apt-get -qq update \
-  && apt-get install -y wget curl bash git neofetch sudo software-properties-common ffmpeg \
+  && apt-get install -y python3 python3-pip wget curl bash git neofetch sudo software-properties-common ffmpeg \
   && apt install unzip \
   && rm -rf /var/lib/apt/lists/*
 
