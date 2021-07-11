@@ -69,9 +69,15 @@ def cloneNode(update, context):
         result = gd.clone(link, status_class, ignoreList=ignoreList)
         deleteMessage(context.bot, msg)
         status_class.set_status(True)
-        sendMessage(result, context.bot, update)
+        if update.message.from_user.username:
+            uname = f'@{update.message.from_user.username}'
+        else:
+            uname = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
+        if uname is not None:
+            cc = f'\n\n*Clone by: {uname} ID:* `{update.message.from_user.id}`'
+        sendMessage(result + cc, context.bot, update)
     else:
-        sendMessage("Please Provide a Google Drive Shared Link to Clone.", bot, update)
+        sendMessage("*Please Provide a Google Drive Shared Link to Clone.*", bot, update)
 
 
 @run_async
@@ -80,7 +86,14 @@ def sendCloneStatus(update, context, status, msg, link):
     while not status.done():
         sleeper(3)
         try:
-            text=f'🔗 *Cloning:* [{status.MainFolderName}]({status.MainFolderLink})\n━━━━━━━━━━━━━━\n🗃️ *Current File:* `{status.get_name()}`\n📚 *Total File:* `{status.total_files()}`\n⬆️ *Transferred*: `{status.get_size()}`\n📁 *Destination:* [{status.DestinationFolderName}]({status.DestinationFolderLink})'
+            if update.message.from_user.username:
+                uname = f'@{update.message.from_user.username}'
+            else:
+                uname = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
+            text=f'🔗 *Cloning:* [{status.MainFolderName}]({status.MainFolderLink})\n━━━━━━━━━━━━━━\n' \
+                 f'🗃️ *Current File:* `{status.get_name()}`\n📚 *Total File:* `{len(status.get_size())}`\n' \
+                 f'⬆️ *Transferred*: `{status.get_size()}`\n📁 *Destination:* [{status.DestinationFolderName}]({status.DestinationFolderLink})\n\n' \
+                 f'*👤 Clone by: {uname} ID:* `{update.message.from_user.id}`'
             if status.checkFileStatus():
                 text += f"\n🕒 *Checking Existing Files:* `{str(status.checkFileStatus())}`"
             if not text == old_text:
