@@ -74,10 +74,10 @@ def cloneNode(update, context):
         else:
             uname = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
         if uname is not None:
-            cc = f'\n\n*Clone by: {uname} ID:* `{update.message.from_user.id}`'
+            cc = f'\n\n<b>Clone by: {uname} ID:</b> <code>{update.message.from_user.id}</code>'
         sendMessage(result + cc, context.bot, update)
     else:
-        sendMessage("*Please Provide a Google Drive Shared Link to Clone.*", bot, update)
+        sendMessage("<b>Please Provide a Google Drive Shared Link to Clone.</b>", bot, update)
 
 
 @run_async
@@ -91,7 +91,7 @@ def sendCloneStatus(update, context, status, msg, link):
             else:
                 uname = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
             text=f'🔗 *Cloning:* [{status.MainFolderName}]({status.MainFolderLink})\n━━━━━━━━━━━━━━\n' \
-                 f'🗃️ *Current File:* `{status.get_name()}`\n📚 *Total File:* `{len(status.get_size())}`\n' \
+                 f'🗃️ *Current File:* `{status.get_name()}`\n📚 *Total File:* `{len(status.get_name())}`\n' \
                  f'⬆️ *Transferred*: `{status.get_size()}`\n📁 *Destination:* [{status.DestinationFolderName}]({status.DestinationFolderLink})\n\n' \
                  f'*👤 Clone by: {uname} ID:* `{update.message.from_user.id}`'
             if status.checkFileStatus():
@@ -122,9 +122,15 @@ def countNode(update,context):
         gd = GoogleDriveHelper()
         result = gd.count(link)
         deleteMessage(context.bot,msg)
-        sendMessage(result,context.bot,update)
+        if update.message.from_user.username:
+            uname = f'@{update.message.from_user.username}'
+        else:
+            uname = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
+        if uname is not None:
+            cc = f'\n\n<b>Count by: {uname} ID:</b> <code>{update.message.from_user.id}</code>'
+        sendMessage(result + cc,context.bot,update)
     else:
-        sendMessage("Provide G-Drive Shareable Link to Count.",context.bot,update)
+        sendMessage("<b>Provide G-Drive Shareable Link to Count.</b>",context.bot,update)
 
 @run_async
 @is_owner
