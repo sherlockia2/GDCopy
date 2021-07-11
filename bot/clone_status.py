@@ -44,6 +44,3 @@ class CloneStatus:
     def SetDestinationFolder(self, folder_name, link):
         self.DestinationFolderName = folder_name
         self.DestinationFolderLink = link
-        
-    def total_files(self, value=1):
-        self.total_files += int(value)
