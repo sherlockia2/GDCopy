@@ -91,7 +91,7 @@ def sendCloneStatus(update, context, status, msg, link):
             else:
                 uname = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
             text=f'🔗 *Cloning:* [{status.MainFolderName}]({status.MainFolderLink})\n━━━━━━━━━━━━━━\n' \
-                 f'🗃️ *Current File:* `{status.get_name()}`\n📚 *Total File:* `{len(status.get_name())}`\n' \
+                 f'🗃️ *Current File:* `{status.get_name()}`\n📚 *Total File:* `{int(len(status.get_name()))}`\n' \
                  f'⬆️ *Transferred*: `{status.get_size()}`\n📁 *Destination:* [{status.DestinationFolderName}]({status.DestinationFolderLink})\n\n' \
                  f'*👤 Clone by: {uname} ID:* `{update.message.from_user.id}`'
             if status.checkFileStatus():
