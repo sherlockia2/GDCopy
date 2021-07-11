@@ -10,6 +10,7 @@ class CloneStatus:
         self.MainFolderLink = ''
         self.DestinationFolderName = ''
         self.DestinationFolderLink = ''
+        self.total_files = 0
 
 
     def get_size(self):
@@ -43,3 +44,6 @@ class CloneStatus:
     def SetDestinationFolder(self, folder_name, link):
         self.DestinationFolderName = folder_name
         self.DestinationFolderLink = link
+        
+    def total_files(self):
+        self.total_files += 1
