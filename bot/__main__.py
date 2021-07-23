@@ -190,8 +190,9 @@ def gitpull(update, context):
     for i in reversed(range(5)):
         msg.edit_text(sent_msg + str(i + 1))
         time.sleep(1)
+
     if not result.stdout.read():
-        msg.edit_text(result.stderr.read(),....)
+        msg.edit_text(f'{result.stderr.read()}')
        #msg.edit_text(f"Do Restart after you see this with /{BotCommands.RestartCommand}.")
 
 botcmds = [
