@@ -195,13 +195,14 @@ def gitpull(update, context):
        #msg.edit_text(f"Do Restart after you see this with /{BotCommands.RestartCommand}.")
 
 botcmds = [
-BotCommand(f'clone','Copy file/folder to Drive'),
-BotCommand(f'count','Count file/folder of Drive link')]
+BotCommand('clone','Copy file/folder to Drive'),
+BotCommand('count','Count file/folder of Drive link')]
 
 
 def main():
     LOGGER.info("Bot Started!")
     bot.set_my_commands(botcmds)
+    dispatcher.bot.sendMessage(chat_id=OWNER_ID, text=f"<b>Bot Started Successfully!</b>", parse_mode=ParseMode.HTML)
     clone_handler = CommandHandler('clone', cloneNode)
     start_handler = CommandHandler('start', start)
     help_handler = CommandHandler('help', helper)
