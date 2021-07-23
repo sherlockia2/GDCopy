@@ -1,6 +1,8 @@
+import os
 import subprocess
 import time
 import importlib
+import subprocess
 
 from telegram import ParseMode, BotCommand
 from telegram.ext import CommandHandler, run_async
@@ -8,7 +10,7 @@ from telegram.error import TimedOut, BadRequest
 
 from bot.gDrive import GoogleDriveHelper
 from bot.fs_utils import get_readable_file_size
-from bot.config import BOT_TOKEN, OWNER_ID, GDRIVE_FOLDER_ID
+from bot.config import BOT_TOKEN, OWNER_ID, GDRIVE_FOLDER_ID, GIT_PASS
 from bot.decorators import is_authorised, is_owner
 from bot.clone_status import CloneStatus
 from bot.msg_utils import deleteMessage, sendMessage
@@ -174,6 +176,23 @@ def shell(update, context):
     else:
         message.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
 
+@run_async
+@is_owner
+def gitpull(update, context):
+    msg = update.effective_message.reply_text(
+        "Pulling all changes from remote and then attempting to restart.",
+    )
+    proc = subprocess.Popen("git pull", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    result = proc.communicate(GIT_PASS)
+
+    sent_msg = msg.text + "\n\nChanges pulled... I guess..."
+
+    for i in reversed(range(5)):
+        msg.edit_text(sent_msg + str(i + 1))
+        time.sleep(1)
+    if not result.stdout.read():
+        msg.edit_text(result.stderr.read(),....)
+       #msg.edit_text(f"Do Restart after you see this with /{BotCommands.RestartCommand}.")
 
 botcmds = [
 BotCommand(f'clone','Copy file/folder to Drive'),
@@ -189,7 +208,9 @@ def main():
     log_handler = CommandHandler('logs', sendLogs)
     count_handler = CommandHandler('count', countNode)
     shell_handler = CommandHandler(['shell', 'sh', 'tr', 'term', 'terminal'], shell)
+    GITPULL_HANDLER = CommandHandler('update', gitpull)
     
+    dispatcher.add_handler(GITPULL_HANDLER)
     dispatcher.add_handler(shell_handler)
     dispatcher.add_handler(count_handler)
     dispatcher.add_handler(log_handler)
