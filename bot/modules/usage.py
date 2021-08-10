@@ -8,7 +8,7 @@ from bot import dispatcher
 from bot.decorators import is_owner
 from bot.msg_utils import sendMessage
 from telegram import update
-from telegram.ext import CommandHandler
+from telegram.ext import CommandHandler, run_async
 
 password = os.environ.get("password", "pass")
 
