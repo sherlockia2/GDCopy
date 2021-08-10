@@ -1,6 +1,9 @@
 FROM ubuntu:latest
 
 WORKDIR /usr/src/app
+
+ENV TZ=Asia/Jakarta
+
 RUN chmod 777 /usr/src/app
 RUN apt-get -qq update
 RUN DEBIAN_FRONTEND="noninteractive" 
