@@ -79,7 +79,7 @@ def dyno_usage(update, context):
                 "<b>Estimated Dyno Expired:</b>\n"
                 f"• <code>{day}</code> <b>Days</b>\n\n"
                 "<b>Your Account Email:</b>\n"
-                f"• <code>{email}</code>"
+                f"• <code>{email}</code>\n\n"
                 "<b>Your Account Password:</b>\n"
                 f"• <code>{password}</code>",
                 context.bot,
