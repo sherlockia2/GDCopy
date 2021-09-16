@@ -6,7 +6,7 @@ import subprocess
 
 from sys import executable
 
-from telegram import ParseMode, BotCommand
+from telegram import ParseMode, BotCommand, MessageHandler, Filters
 from telegram.ext import CommandHandler, run_async
 from telegram.error import TimedOut, BadRequest
 
@@ -25,6 +25,8 @@ for module in ALL_MODULES:
 
 REPO_LINK = "https://github.com/jagrit007/Telegram-CloneBot"
 # Soon to be used for direct updates from within the bot.
+
+CLONE_REGEX = r"https://drive\.google\.com/(drive)?/?u?/?\d?/?(mobile)?/?(file)?(folders)?/?d?/(?P<id>[-\w]+)[?+]?/?(w+)?"
 
 @run_async
 def start(update, context):
@@ -51,8 +53,8 @@ def helper(update, context):
 def cloneNode(update, context):
     LOGGER.info('UID: {} - UN: {} - MSG: {}'.format(update.message.chat.id, update.message.chat.username, update.message.text))
     args = update.message.text.split(" ")
-    if len(args) > 1:
-        link = args[1]
+    if len(args) >= 1:
+        link = args[0]
         try:
             ignoreList = args[-1].split(',')
         except IndexError:
@@ -60,7 +62,7 @@ def cloneNode(update, context):
 
         DESTINATION_ID = GDRIVE_FOLDER_ID
         try:
-            DESTINATION_ID = args[2]
+            DESTINATION_ID = args[1]
             print(DESTINATION_ID)
         except IndexError:
             pass
@@ -223,7 +225,7 @@ def main():
     bot.set_my_commands(botcmds)
     
     dispatcher.bot.sendMessage(chat_id=OWNER_ID, text=f"<b>Bot Started Successfully!</b>", parse_mode=ParseMode.HTML)
-    clone_handler = CommandHandler('clone', cloneNode)
+    clone_handler = MessageHandler(filters=Filters.regex(CLONE_REGEX), callback=cloneNode)
     start_handler = CommandHandler('start', start)
     help_handler = CommandHandler('help', helper)
     log_handler = CommandHandler('logs', sendLogs)
