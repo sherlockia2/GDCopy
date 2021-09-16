@@ -6,8 +6,8 @@ import subprocess
 
 from sys import executable
 
-from telegram import ParseMode, BotCommand, MessageHandler, Filters
-from telegram.ext import CommandHandler, run_async
+from telegram import ParseMode, BotCommand
+from telegram.ext import CommandHandler, MessageHandler, Filters, run_async
 from telegram.error import TimedOut, BadRequest
 
 from bot.gDrive import GoogleDriveHelper
