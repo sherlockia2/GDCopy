@@ -54,20 +54,21 @@ def cloneNode(update, context):
     LOGGER.info('UID: {} - UN: {} - MSG: {}'.format(update.message.chat.id, update.message.chat.username, update.message.text))
     args = update.message.text.split(" ")
     if len(args) >= 1:
-        link = args[0]
+        DESTINATION_ID = GDRIVE_FOLDER_ID
+        try:
+            link = args[1]
+            DESTINATION_ID = args[2]
+        except IndexError:
+            link = args[0]
+            DESTINATION_ID = args[1]
+        
+        print(DESTINATION_ID) # Usage: /clone <FolderToClone> <Destination> <IDtoIgnoreFromClone>,<IDtoIgnoreFromClone>
+        
         try:
             ignoreList = args[-1].split(',')
         except IndexError:
             ignoreList = []
-
-        DESTINATION_ID = GDRIVE_FOLDER_ID
-        try:
-            DESTINATION_ID = args[1]
-            print(DESTINATION_ID)
-        except IndexError:
-            pass
-            # Usage: /clone <FolderToClone> <Destination> <IDtoIgnoreFromClone>,<IDtoIgnoreFromClone>
-
+        
         msg = sendMessage(f"<b>Cloning:</b> <code>{link}</code>", context.bot, update)
         status_class = CloneStatus()
         gd = GoogleDriveHelper(GFolder_ID=DESTINATION_ID)
@@ -224,7 +225,7 @@ def main():
         os.remove(".restartmsg")
     bot.set_my_commands(botcmds)
     
-    dispatcher.bot.sendMessage(chat_id=OWNER_ID, text=f"<b>Bot Started Successfully!</b>", parse_mode=ParseMode.HTML)
+    bot.sendMessage(chat_id=OWNER_ID, text=f"<b>Bot Started Successfully!</b>", parse_mode=ParseMode.HTML)
     clone_handler = MessageHandler(filters=Filters.regex(CLONE_REGEX), callback=cloneNode)
     start_handler = CommandHandler('start', start)
     help_handler = CommandHandler('help', helper)
