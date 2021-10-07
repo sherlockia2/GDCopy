@@ -54,14 +54,18 @@ def cloneNode(update, context):
     LOGGER.info('UID: {} - UN: {} - MSG: {}'.format(update.message.chat.id, update.message.chat.username, update.message.text))
     args = update.message.text.split(" ")
     if len(args) >= 1:
+        
         DESTINATION_ID = GDRIVE_FOLDER_ID
         try:
-            link = args[1]
-            DESTINATION_ID = args[2]
+            if "clone" in args[0]:
+                link = args[1]
+                DESTINATION_ID = args[2]
+            else:
+                link = args[0]
+                DESTINATION_ID = args[1]
         except IndexError:
-            link = args[0]
-            DESTINATION_ID = args[1]
-        
+            pass
+
         print(DESTINATION_ID) # Usage: /clone <FolderToClone> <Destination> <IDtoIgnoreFromClone>,<IDtoIgnoreFromClone>
         
         try:
@@ -213,7 +217,8 @@ def restart(update, context):
 
 botcmds = [
 BotCommand('clone','Copy file/folder to Drive'),
-BotCommand('count','Count file/folder of Drive link')]
+BotCommand('count','Count file/folder of Drive link')
+]
 
 
 def main():
@@ -226,7 +231,8 @@ def main():
     bot.set_my_commands(botcmds)
     
     bot.sendMessage(chat_id=OWNER_ID, text=f"<b>Bot Started Successfully!</b>", parse_mode=ParseMode.HTML)
-    clone_handler = MessageHandler(filters=Filters.regex(CLONE_REGEX), callback=cloneNode)
+    regex_clone_handler = MessageHandler(filters=Filters.regex(CLONE_REGEX), callback=cloneNode)
+    clone_handler = CommandHandler('clone', cloneNode)
     start_handler = CommandHandler('start', start)
     help_handler = CommandHandler('help', helper)
     log_handler = CommandHandler('logs', sendLogs)
@@ -242,6 +248,7 @@ def main():
     dispatcher.add_handler(log_handler)
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(clone_handler)
+    dispatcher.add_handler(regex_clone_handler)
     dispatcher.add_handler(help_handler)
     updater.start_polling()
 
