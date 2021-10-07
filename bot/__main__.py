@@ -57,7 +57,7 @@ def cloneNode(update, context):
         
         DESTINATION_ID = GDRIVE_FOLDER_ID
         try:
-            if "clone" in args[0]:
+            if "clone" in args[0] or "count" in args[0]:
                 link = args[1]
                 DESTINATION_ID = args[2]
             else:
