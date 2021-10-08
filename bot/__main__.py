@@ -12,7 +12,7 @@ from telegram.error import TimedOut, BadRequest
 
 from bot.gDrive import GoogleDriveHelper
 from bot.fs_utils import get_readable_file_size
-from bot.config import BOT_TOKEN, OWNER_ID, GDRIVE_FOLDER_ID, GIT_PASS
+from bot.config import BOT_TOKEN, OWNER_ID, GDRIVE_FOLDER_ID, GIT_PASS, AUTHORISED_USERS
 from bot.decorators import is_authorised, is_owner
 from bot.clone_status import CloneStatus
 from bot.msg_utils import deleteMessage, sendMessage
@@ -57,7 +57,7 @@ def cloneNode(update, context):
         
         DESTINATION_ID = GDRIVE_FOLDER_ID
         try:
-            if "clone" in args[0] or "count" in args[0]:
+            if "clone" in args[0] or "count" in args[0] or "del" in args[0]:
                 link = args[1]
                 DESTINATION_ID = args[2]
             else:
@@ -231,6 +231,11 @@ def main():
     bot.set_my_commands(botcmds)
     
     bot.sendMessage(chat_id=OWNER_ID, text=f"<b>Bot Started Successfully!</b>", parse_mode=ParseMode.HTML)
+    try:
+        for i in AUTHORISED_USERS:
+            bot.sendMessage(chat_id=i, text=f"<b>Bot Started Successfully!</b>", parse_mode=ParseMode.HTML)
+    except Exception:
+        pass
     regex_clone_handler = MessageHandler(filters=Filters.regex(CLONE_REGEX), callback=cloneNode)
     clone_handler = CommandHandler('clone', cloneNode)
     start_handler = CommandHandler('start', start)
