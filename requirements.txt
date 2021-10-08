@@ -9,4 +9,3 @@ speedtest-cli
 pytz
 psutil
 heroku3
-wget
