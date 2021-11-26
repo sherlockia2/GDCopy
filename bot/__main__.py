@@ -11,7 +11,7 @@ from telegram.ext import CommandHandler, MessageHandler, Filters, run_async
 from telegram.error import TimedOut, BadRequest
 
 from bot.gDrive import GoogleDriveHelper
-from bot.fs_utils import get_readable_file_size
+from bot.fs_utils import get_readable_file_size, is_gdtot_link, gdtot
 from bot.config import BOT_TOKEN, OWNER_ID, GDRIVE_FOLDER_ID, GIT_PASS, AUTHORISED_USERS
 from bot.decorators import is_authorised, is_owner
 from bot.clone_status import CloneStatus
@@ -52,20 +52,24 @@ def helper(update, context):
 @is_authorised
 def cloneNode(update, context):
     LOGGER.info('UID: {} - UN: {} - MSG: {}'.format(update.message.chat.id, update.message.chat.username, update.message.text))
-    args = update.message.text.split(" ")
-    if len(args) >= 1:
+    
+    args = update.message.text.split(" ", maxsplit=1)
+    reply_to = update.message.reply_to_message
+    if len(args) > 1:
+        link = args[1]
+    elif reply_to is not None:
+        link = reply_to.text
+    else:
+        link = ''
+    
+    if is_gdtot_link(link):
+        link = gdtot(link)
+        if link is None:
+            return sendMessage("<code>Something Wrong In Your GDTot Link !</code>", context.bot, update)
+    
+    if is_gdrive_link(link):
         
         DESTINATION_ID = GDRIVE_FOLDER_ID
-        try:
-            if "clone" in args[0] or "count" in args[0] or "del" in args[0]:
-                link = args[1]
-                DESTINATION_ID = args[2]
-            else:
-                link = args[0]
-                DESTINATION_ID = args[1]
-        except IndexError:
-            pass
-
         print(DESTINATION_ID) # Usage: /clone <FolderToClone> <Destination> <IDtoIgnoreFromClone>,<IDtoIgnoreFromClone>
         
         try:
@@ -126,9 +130,21 @@ def sleeper(value, enabled=True):
 @is_authorised
 def countNode(update,context):
     LOGGER.info('UID: {} - UN: {} - MSG: {}'.format(update.message.chat.id, update.message.chat.username, update.message.text))
-    args = update.message.text.split(" ",maxsplit=1)
+    args = update.message.text.split(" ", maxsplit=1)
+    reply_to = update.message.reply_to_message
     if len(args) > 1:
         link = args[1]
+    elif reply_to is not None:
+        link = reply_to.text
+    else:
+        link = ''
+    
+    if is_gdtot_link(link):
+        link = gdtot(link)
+        if link is None:
+            return sendMessage("<code>Something Wrong In Your GDTot Link !</code>", context.bot, update)
+    
+    if is_gdrive_link(link):
         msg = sendMessage(f"Counting: <code>{link}</code>",context.bot,update)
         gd = GoogleDriveHelper()
         result = gd.count(link)
@@ -139,9 +155,9 @@ def countNode(update,context):
             uname = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
         if uname is not None:
             cc = f'\n\n<b>Count by: {uname} ID:</b> <code>{update.message.from_user.id}</code>'
-        sendMessage(result + cc,context.bot,update)
+        sendMessage(result + cc, context.bot, update)
     else:
-        sendMessage("<b>Provide G-Drive Shareable Link to Count.</b>",context.bot,update)
+        sendMessage("<b>Provide G-Drive Shareable Link to Count.</b>", context.bot, update)
 
 @run_async
 @is_owner
@@ -188,21 +204,18 @@ def shell(update, context):
 @run_async
 @is_owner
 def gitpull(update, context):
-    msg = update.effective_message.reply_text(
-        "Pulling all changes from remote and then attempting to restart.",
-    )
-    proc = subprocess.Popen("git pull", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    result = proc.communicate(GIT_PASS)
-
-    sent_msg = msg.text + "\n\nChanges pulled... I guess..."
-
-    for i in reversed(range(5)):
-        msg.edit_text(sent_msg + str(i + 1))
-        time.sleep(1)
-
-    if not result.stdout.read():
-        msg.edit_text(f'{result.stderr.read()}')
-       #msg.edit_text(f"Do Restart after you see this with /{BotCommands.RestartCommand}.")
+    try:
+        out = subprocess.check_output(["git", "pull"]).decode("UTF-8")
+        if "Already up to date." in str(out):
+            return sendMessage("<b>Its already up-to date !</b>", context.bot, update)
+        sendMessage(f"<code>{out}</code>", context.bot, update) # Changelog
+        restart_message = sendMessage(f"<b>Updated with default branch, restarting now.</b>", context.bot, update)
+        with open(".restartmsg", "w") as f:
+            f.truncate(0)
+            f.write(f"{restart_message.chat.id}\n{restart_message.message_id}\n")
+        os.execl(executable, executable, "-m", "bot")
+    except Exception as e:
+        sendMessage(f'<b>ERROR :</b> <code>{e}</code>', context.bot, update)
 
 
 @run_async
@@ -216,8 +229,8 @@ def restart(update, context):
     os.execl(executable, executable, "-m", "bot")
 
 botcmds = [
-BotCommand('clone','Copy file/folder to Drive'),
-BotCommand('count','Count file/folder of Drive link')
+    BotCommand('clone','Copy file/folder to Drive'),
+    BotCommand('count','Count file/folder of Drive link')
 ]
 
 
@@ -236,7 +249,8 @@ def main():
             bot.sendMessage(chat_id=i, text=f"<b>Bot Started Successfully!</b>", parse_mode=ParseMode.HTML)
     except Exception:
         pass
-    regex_clone_handler = MessageHandler(filters=Filters.regex(CLONE_REGEX), callback=cloneNode)
+    
+    #regex_clone_handler = MessageHandler(filters=Filters.regex(CLONE_REGEX), callback=cloneNode)
     clone_handler = CommandHandler('clone', cloneNode)
     start_handler = CommandHandler('start', start)
     help_handler = CommandHandler('help', helper)
@@ -253,7 +267,7 @@ def main():
     dispatcher.add_handler(log_handler)
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(clone_handler)
-    dispatcher.add_handler(regex_clone_handler)
+    #dispatcher.add_handler(regex_clone_handler)
     dispatcher.add_handler(help_handler)
     updater.start_polling()
 
