@@ -9,9 +9,6 @@ PHPSESSID = os.environ.get('PHPSESSID', None)
 
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 
-def is_gdrive_link(url: str):
-    return bool("drive.google.com" in url)
-
 def is_gdtot_link(url: str):
     url = re.match(r'https?://.*.gdtot.\S+', url)
     return bool(url)
