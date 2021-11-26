@@ -60,15 +60,14 @@ def cloneNode(update, context):
     elif reply_to is not None:
         link = reply_to.text
     else:
-        link = ''
+        link = None
     
     if is_gdtot_link(link):
         link = gdtot(link)
         if link is None:
             return sendMessage("<code>Something Wrong In Your GDTot Link !</code>", context.bot, update)
     
-    if is_gdrive_link(link):
-        
+    if link is not None:
         DESTINATION_ID = GDRIVE_FOLDER_ID
         print(DESTINATION_ID) # Usage: /clone <FolderToClone> <Destination> <IDtoIgnoreFromClone>,<IDtoIgnoreFromClone>
         
