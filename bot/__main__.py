@@ -136,14 +136,14 @@ def countNode(update,context):
     elif reply_to is not None:
         link = reply_to.text
     else:
-        link = ''
+        link = None
     
     if is_gdtot_link(link):
         link = gdtot(link)
         if link is None:
             return sendMessage("<code>Something Wrong In Your GDTot Link !</code>", context.bot, update)
     
-    if is_gdrive_link(link):
+    if link is not None:
         msg = sendMessage(f"Counting: <code>{link}</code>",context.bot,update)
         gd = GoogleDriveHelper()
         result = gd.count(link)
