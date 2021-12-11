@@ -1,6 +1,8 @@
 import os
 import pickle
 import urllib.parse as urlparse
+import random
+
 from urllib.parse import parse_qs
 from bot import LOGGER
 
@@ -24,7 +26,13 @@ from bot.fs_utils import get_mime_type
 
 logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
 socket.setdefaulttimeout(650) # https://github.com/googleapis/google-api-python-client/issues/632#issuecomment-541973021
-SERVICE_ACCOUNT_INDEX = 0
+
+try:
+    if USE_SERVICE_ACCOUNTS:
+        SERVICE_ACCOUNT_INDEX = random.randrange(len(os.listdir("accounts")))
+except FileNotFoundError:
+    USE_SERVICE_ACCOUNTS = False
+    LOGGER.info('Failed To Load Accounts Folder')
 
 def clean_name(name):
     name = name.replace("'", "\\'")
@@ -55,6 +63,8 @@ class GoogleDriveHelper:
         self.updater = None
         self.name = name
         self.update_interval = 3
+        self.sa_count = 0
+        self.alt_auth = False
         if not len(GFolder_ID) == 33 or not len(GFolder_ID) == 19:
             self.gparentid = self.getIdFromUrl(GFolder_ID)
         else:
@@ -86,7 +96,33 @@ class GoogleDriveHelper:
             return res.group('id')
         parsed = urlparse.urlparse(link)
         return parse_qs(parsed.query)['id'][0]
-
+    
+    def deletefile(self, link: str):
+        try:
+            file_id = self.getIdFromUrl(link)
+        except (KeyError, IndexError):
+            msg = "Google Drive ID could not be found in the provided link"
+            return msg
+        msg = ''
+        try:
+            res = self.__service.files().delete(fileId=file_id, supportsTeamDrives=IS_TEAM_DRIVE).execute()
+            msg = "Successfully deleted"
+            LOGGER.info(f"Delete Result: {msg}")
+        except HttpError as err:
+            if "File not found" in str(err):
+                msg = "No such file exist"
+            elif "insufficientFilePermissions" in str(err):
+                msg = "Insufficient File Permissions"
+                token_service = self.alt_authorize()
+                if token_service is not None:
+                    self.__service = token_service
+                    return self.deletefile(link)
+            else:
+                msg = str(err)
+            LOGGER.error(f"Delete Result: {msg}")
+        finally:
+            return msg
+    
     def switchServiceAccount(self):
         global SERVICE_ACCOUNT_INDEX
         service_account_count = len(os.listdir("accounts"))
@@ -122,7 +158,7 @@ class GoogleDriveHelper:
         except HttpError as err:
             if err.resp.get('content-type', '').startswith('application/json'):
                 reason = json.loads(err.content).get('error').get('errors')[0].get('reason')
-                if reason == 'userRateLimitExceeded' or reason == 'dailyLimitExceeded':
+                if reason in ['userRateLimitExceeded', 'dailyLimitExceeded']:
                     if USE_SERVICE_ACCOUNTS:
                         self.switchServiceAccount()
                         LOGGER.info(f"Got: {reason}, Trying Again.")
@@ -321,7 +357,28 @@ class GoogleDriveHelper:
                 f'accounts/{SERVICE_ACCOUNT_INDEX}.json',
                 scopes=self.__OAUTH_SCOPE)
         return build('drive', 'v3', credentials=credentials, cache_discovery=False)
-
+    
+    def alt_authorize(self):
+        credentials = None
+        if USE_SERVICE_ACCOUNTS and not self.alt_auth:
+            self.alt_auth = True
+            if os.path.exists(self.__G_DRIVE_TOKEN_FILE):
+                LOGGER.info("Authorize with token.pickle")
+                with open(self.__G_DRIVE_TOKEN_FILE, 'rb') as f:
+                    credentials = pickle.load(f)
+                if credentials is None or not credentials.valid:
+                    if credentials and credentials.expired and credentials.refresh_token:
+                        credentials.refresh(Request())
+                    else:
+                        flow = InstalledAppFlow.from_client_secrets_file(
+                            'credentials.json', self.__OAUTH_SCOPE)
+                        LOGGER.info(flow)
+                        credentials = flow.run_console(port=0)
+                    # Save the credentials for the next run
+                    with open(self.__G_DRIVE_TOKEN_FILE, 'wb') as token:
+                        pickle.dump(credentials, token)
+                return build('drive', 'v3', credentials=credentials, cache_discovery=False)
+        return None
     
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(15),
            retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, logging.DEBUG))
@@ -422,7 +479,7 @@ class GoogleDriveHelper:
             else:
                 self.total_files += 1
                 self.gDrive_file(**file_)
-
+            
 def get_readable_file_size(size_in_bytes) -> str:
     SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
     if size_in_bytes is None:
