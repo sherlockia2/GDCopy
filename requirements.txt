@@ -6,7 +6,6 @@ google-auth-oauthlib>=0.4.1,<0.10.0
 tenacity>=6.0.0
 python-magic
 speedtest-cli
-pytz
 psutil
 heroku3
 bs4
