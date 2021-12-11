@@ -1,9 +1,9 @@
 requests
 python-telegram-bot==12.6.1
-google-api-python-client==2.24.0
-google-auth-httplib2>=0.0.3,<0.1.0
-google-auth-oauthlib>=0.4.1,<0.10.0
-tenacity>=6.0.0
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+tenacity
 python-magic
 speedtest-cli
 psutil
