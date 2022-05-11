@@ -4,7 +4,7 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 tenacity
-python-magic
+python-magic==0.4.14
 speedtest-cli
 psutil
 heroku3
