@@ -1,16 +1,7 @@
 {
-  "name": "TelegramCloneBot",
-  "description": "Telegram CloneBot by @jagrit007",
+  "name": "GDCopy",
+  "description": "GDrive bot",
   "logo": "https://i.imgur.com/ZLi4nDP.jpg",
-  "keywords": [
-    "telegram",
-    "clone",
-    "google drive",
-    "clone bot"
-  ],
-  "repository": "https://github.com/jagrit007/Telegram-CloneBot",
-  "website":   "https://github.com/jagrit007/Telegram-CloneBot",
-  "success_url": "https://t.me/scippletech",
   "stack": "container",
   "env": {
     "BOT_TOKEN": {
